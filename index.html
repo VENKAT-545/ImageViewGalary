@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Image Gallery</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .thumbnail-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .thumbnail {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .main-view {
+            position: relative;
+            margin-bottom: 20px;
+            height: 500px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #000;
+        }
+        
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 24px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+        
+        .nav-button:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .prev {
+            left: 20px;
+        }
+        
+        .next {
+            right: 20px;
+        }
+        
+        .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        .active {
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        @media (max-width: 768px) {
+            .thumbnail-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .main-view {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-container">
+        <h1>Image Gallery</h1>
+        
+        <div class="main-view">
+            <img class="main-image" id="mainImage" src="" alt="Main view">
+            <button class="nav-button prev" onclick="prevImage()">❮</button>
+            <button class="nav-button next" onclick="nextImage()">❯</button>
+            <div class="caption" id="imageCaption"></div>
+        </div>
+        
+        <div class="thumbnail-container" id="thumbnailContainer">
+            <!-- Thumbnails will be added by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Image data - replace with your own images
+        const images = [
+            {
+                src: "https://wallup.net/wp-content/uploads/2014/10/nature/Beautiful_Forest_Green_Lake_Landscape.jpg",
+                alt: "Beautiful nature landscape",
+                caption: "Nature Landscape 1"
+            },
+            {
+                src: "https://th.bing.com/th/id/R.4a95c7896762b205371e700de394f064?rik=C6SdPLmbFLOtXg&riu=http%3a%2f%2fwww.hdwallpaperspulse.com%2fwp-content%2fuploads%2f2017%2f08%2f07%2fawesome-mountain-image-hd.jpg&ehk=plo51Q16KGVBta47OiqQhfZ1ViuHAoSYn3eThIsVhac%3d&risl=&pid=ImgRaw&r=0",
+                alt: "Mountain view",
+                caption: "Mountain View"
+            },
+            {
+                src: "https://images.pexels.com/photos/1103971/pexels-photo-1103971.jpeg?cs=srgb&dl=backlit-branches-dawn-1103971.jpg&fm=jpg",
+                alt: "Forest path",
+                caption: "Forest Path"
+            },
+            {
+                src: "https://www.wallpaperflare.com/static/609/381/68/sea-waves-water-illustration-wallpaper-preview.jpg",
+                alt: "Ocean waves",
+                caption: "Ocean Waves"
+            },
+            {
+                src: "https://images.pexels.com/photos/635279/pexels-photo-635279.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260",
+                alt: "Sunset beach",
+                caption: "Sunset Beach"
+            },
+            {
+                src: "https://backiee.com/static/wpdb/wallpapers/1920x1080/177051.jpg",
+                alt: "Desert dunes",
+                caption: "Desert Dunes"
+            },
+            {
+                src: "https://res-1.cloudinary.com/enchanting/w_1600,h_700,c_fill/et-web/2015/06/1600-Iguazu-Falls-Argentina-shutterstock_172190801.jpg",
+                alt: "Waterfall",
+                caption: "Waterfall"
+            },
+            {
+                src: "https://th.bing.com/th/id/OIP.a0TXXJi07kZ7jnJU4Rr9xwHaEo?cb=iwp1&rs=1&pid=ImgDetMain",
+                alt: "Autumn forest",
+                caption: "Autumn Forest"
+            }
+        ];
+        
+        let currentIndex = 0;
+        const mainImage = document.getElementById('mainImage');
+        const imageCaption = document.getElementById('imageCaption');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
+        
+        // Initialize the gallery
+        function initGallery() {
+            // Load first image
+            loadImage(currentIndex);
+            
+            // Create thumbnails
+            images.forEach((image, index) => {
+                const thumbnail = document.createElement('img');
+                thumbnail.src = image.src;
+                thumbnail.alt = image.alt;
+                thumbnail.classList.add('thumbnail');
+                thumbnail.dataset.index = index;
+                
+                // Highlight first thumbnail
+                if (index === 0) {
+                    thumbnail.classList.add('active');
+                }
+                
+                thumbnail.addEventListener('click', () => {
+                    currentIndex = index;
+                    loadImage(currentIndex);
+                    updateActiveThumbnail();
+                });
+                
+                thumbnailContainer.appendChild(thumbnail);
+            });
+        }
+        
+        // Load image into main view
+        function loadImage(index) {
+            const image = images[index];
+            mainImage.src = image.src;
+            mainImage.alt = image.alt;
+            imageCaption.textContent = image.caption;
+        }
+        
+        // Update active thumbnail
+        function updateActiveThumbnail() {
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            thumbnails.forEach((thumb, index) => {
+                if (index === currentIndex) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        }
+        
+        // Navigation functions
+        function nextImage() {
+            currentIndex = (currentIndex + 1) % images.length;
+            loadImage(currentIndex);
+            updateActiveThumbnail();
+        }
+        
+        function prevImage() {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            loadImage(currentIndex);
+            updateActiveThumbnail();
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                nextImage();
+            } else if (e.key === 'ArrowLeft') {
+                prevImage();
+            }
+        });
+        
+        // Initialize the gallery when the page loads
+        window.onload = initGallery;
+    </script>
+</body>
+</html>
